@@ -7,7 +7,7 @@
   <meta name="description" content="Demo onboarding flow for new energy connections, styled after the Octopus Energy quote journey." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;0,6..12,800;0,6..12,900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -15,7 +15,9 @@
   <header class="topbar">
     <div class="topbar__inner">
       <a class="brand" href="#" aria-label="Octopus Energy — New Connections">
-        <span class="brand__mark" aria-hidden="true">🐙</span>
+        <img class="brand__logo" src="logo.png" alt="Octopus Energy"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='inline';" />
+        <span class="brand__mark" aria-hidden="true" style="display:none">🐙</span>
         <span class="brand__text">Octopus Energy</span>
         <span class="brand__pill">New Connections</span>
       </a>

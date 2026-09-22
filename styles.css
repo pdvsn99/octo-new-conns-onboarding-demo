@@ -5,24 +5,25 @@
    =========================================================================== */
 
 :root {
-  --bg: #1c0a4a;               /* deep brand purple canvas */
-  --bg-2: #12002e;             /* darker edges / footer feel */
-  --violet: #7c4dff;           /* selected toggle / accent */
-  --violet-soft: #a78bff;
-  --magenta: #ff2ec4;          /* primary CTA */
-  --magenta-2: #ff5ad4;
-  --teal: #4fd1c5;             /* positive */
-  --panel: #271459;            /* input / box fill */
-  --panel-2: #2f1a68;
-  --border: #5a41a6;           /* input borders */
-  --border-soft: #3d2b7a;
+  /* Octopus brand values */
+  --bg: #180048;               /* deep brand purple canvas */
+  --bg-2: #0f002e;             /* darker edges / footer feel */
+  --violet: #5840ff;           /* selected toggle / accent */
+  --violet-soft: #9a8cff;
+  --magenta: #f050f8;          /* primary CTA */
+  --magenta-2: #f877fb;
+  --teal: #60f0f8;             /* positive / accent */
+  --panel: #261058;            /* input / box fill */
+  --panel-2: #2f1668;
+  --border: #5a45b8;           /* input borders */
+  --border-soft: #3b2a86;
   --text: #ffffff;
-  --text-soft: #c9bff0;
-  --text-dim: #9c8fd0;
+  --text-soft: #cabff2;
+  --text-dim: #9a8ed6;
   --radius: 14px;
   --radius-sm: 10px;
   --maxw: 560px;
-  font-family: "Nunito Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -32,7 +33,7 @@ body {
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(900px 500px at 50% -5%, #2c1170 0%, transparent 60%),
+    radial-gradient(900px 500px at 50% -5%, #2a1178 0%, transparent 60%),
     var(--bg);
   -webkit-font-smoothing: antialiased;
 }
@@ -43,6 +44,7 @@ body {
 .topbar__inner { max-width: 1100px; margin: 0 auto; padding: 14px 20px;
   display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand__logo { height: 30px; width: auto; display: inline-block; }
 .brand__mark { font-size: 24px; }
 .brand__text { color: #fff; font-weight: 900; letter-spacing: -0.02em; font-size: 18px; }
 .brand__pill { color: #2a0033; background: var(--magenta); font-weight: 800; font-size: 12px;
@@ -168,7 +170,7 @@ body {
 .vision__k { color: var(--text-dim); font-weight: 700; }
 .vision__v { font-weight: 800; color: #fff; }
 .conf { font-weight: 900; }
-.conf--high { color: #74e6cf; }
+.conf--high { color: var(--teal); }
 .conf--low { color: #ff9db0; }
 
 /* ---------------------------- Demo panel --------------------------------- */
