@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Connections — get started with Octopus</title>
+  <meta name="description" content="Demo onboarding flow for new energy connections, styled after the Octopus Energy quote journey." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="brand" href="#" aria-label="Octopus Energy — New Connections">
+        <img class="brand__logo" src="logo.png" alt="Octopus Energy"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='inline';" />
+        <span class="brand__mark" aria-hidden="true" style="display:none">🐙</span>
+        <span class="brand__text">Octopus Energy</span>
+        <span class="brand__pill">New Connections</span>
+      </a>
+      <div class="topbar__help">
+        <a href="#">Support</a>
+        <a href="#">Log in</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Progress rail -->
+  <nav class="progress" id="progress" aria-label="Progress"></nav>
+
+  <!-- Main quote card -->
+  <main class="stage">
+    <section class="card" id="card" aria-live="polite">
+      <!-- screens render here -->
+    </section>
+    <p class="stage__footnote">This is a demonstration flow. No real data is submitted or stored.</p>
+  </main>
+
+  <!-- Demo control panel (fakes the systems that don't exist yet) -->
+  <button class="demo-toggle" id="demoToggle" aria-expanded="false" aria-controls="demoPanel">
+    <span aria-hidden="true">🎛️</span> Demo controls
+  </button>
+  <aside class="demo-panel" id="demoPanel" hidden aria-label="Demo controls">
+    <div class="demo-panel__head">
+      <h2>Demo controls</h2>
+      <button class="demo-panel__close" id="demoClose" aria-label="Close demo controls">✕</button>
+    </div>
+    <p class="demo-panel__intro">
+      These switches stand in for systems that aren't built yet — the Kraken/ECOES &amp; Kraken/XO
+      lookups and the meter-photo vision model. Set them <em>before</em> reaching each step to steer the flow.
+    </p>
+    <div class="demo-panel__body" id="demoBody"><!-- controls injected --></div>
+  </aside>
+
+  <script src="js/simulate.js"></script>
+  <script src="js/flow.js"></script>
+  <script src="js/engine.js"></script>
+</body>
+</html>
