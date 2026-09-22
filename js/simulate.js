@@ -17,9 +17,16 @@ const DemoState = {
 const DEMO_CONTROLS = [
   { key: 'found',         label: 'MPxN found on Kraken?',       on: 'Found',      off: 'Not found' },
   { key: 'newConnection', label: 'new_connection = TRUE?',      on: 'True',       off: 'False' },
-  { key: 'addressMatch',  label: 'Address on record matches?',  on: 'Matches',    off: "Doesn't match" },
+  { key: 'addressMatch',  label: 'Address ECOES/XO returns',    on: 'The property', off: 'A different one' },
   { key: 'vision',        label: 'Vision model confidence',     on: 'High',       off: 'Low', values: ['high', 'low'] },
 ];
+
+// Placeholder addresses "returned" by ECOES / XO for the confirmation step.
+// Swap these for real sample values whenever you like.
+const SAMPLE_ADDRESSES = {
+  match:    { line1: '12 Ashby Road', line2: 'Bishopston',   town: 'Bristol', postcode: 'BS7 8LR' },
+  mismatch: { line1: '4 Elm Grove',   line2: 'Redland',      town: 'Bristol', postcode: 'BS6 6RH' },
+};
 
 // --- Fake lookups (they just read the switches) ------------------------------
 const Simulate = {
@@ -30,7 +37,8 @@ const Simulate = {
       found: s.found === 'yes',
       newConnection: s.newConnection === 'yes',
       addressMatch: s.addressMatch === 'yes',
-      system: fuel === 'electricity' ? 'Kraken / ECOES' : 'Kraken / XO',
+      address: s.addressMatch === 'yes' ? SAMPLE_ADDRESSES.match : SAMPLE_ADDRESSES.mismatch,
+      system: fuel === 'electricity' ? 'ECOES' : 'XO',
     };
   },
 

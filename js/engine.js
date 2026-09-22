@@ -17,6 +17,7 @@
   const answers = {};
   let current = FLOW.START;
   const history = [];
+  let systemTimer = null; // pending auto-advance for a 'system' (background) screen
 
   const cardEl = document.getElementById('card');
   const progressEl = document.getElementById('progress');
@@ -42,6 +43,10 @@
   // ------------------------------------------------------------- rendering
   function render() {
     const s = FLOW.screens[current];
+    // Cancel any pending auto-advance from a screen we're leaving.
+    if (systemTimer) { clearTimeout(systemTimer); systemTimer = null; }
+    // Background screens run their side effect (lookup / vision) as they mount.
+    if (s.kind === 'system' && s.run) s.run(answers);
     renderProgress(s.section);
 
     const parts = [];
@@ -62,6 +67,7 @@
     if (s.help) parts.push(`<p class="screen__help">${val(s.help)}</p>`);
     if (s.body) parts.push(val(s.body));
 
+    if (s.kind === 'system') parts.push(renderSpinner());
     if (s.kind === 'form') parts.push(renderFields(val(s.fields) || []));
     if (s.kind === 'photo') parts.push(renderUpload());
     if (s.kind === 'choice') parts.push(renderChoices(val(s.choices) || []));
@@ -72,6 +78,19 @@
 
     cardEl.innerHTML = parts.join('\n');
     wire(s);
+
+    // Background screens pause briefly, then move on. push:false keeps them out
+    // of the Back history, so Back skips straight over the "checking" step.
+    if (s.kind === 'system') {
+      systemTimer = setTimeout(() => {
+        systemTimer = null;
+        go(val(s.next), { push: false });
+      }, s.delay || 1600);
+    }
+  }
+
+  function renderSpinner() {
+    return `<div class="sys"><div class="sys__spinner" aria-hidden="true"></div></div>`;
   }
 
   function renderProgress(activeSection) {
@@ -140,6 +159,7 @@
   }
 
   function renderNav(s) {
+    if (s.kind === 'system') return ''; // background screens auto-advance
     const showBack = !s.hideBack && history.length > 0;
     const hasPrimary = s.kind === 'form' || s.kind === 'info' || s.kind === 'photo' ||
                        s.kind === 'success' || (s.kind === 'stop');
