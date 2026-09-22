@@ -173,6 +173,24 @@ body {
 .conf--high { color: var(--teal); }
 .conf--low { color: #ff9db0; }
 
+/* Background "checking" step — brief on-brand spinner while systems run. */
+.sys { display: flex; justify-content: center; padding: 14px 0 4px; }
+.sys__spinner { width: 52px; height: 52px; border-radius: 50%;
+  border: 5px solid rgba(255,255,255,0.14);
+  border-top-color: var(--magenta);
+  border-right-color: var(--violet-soft);
+  animation: sys-spin .9s linear infinite; }
+@keyframes sys-spin { to { transform: rotate(360deg); } }
+
+/* Address "pulled" from ECOES / XO for the confirmation step. */
+.address-card { display: flex; align-items: center; gap: 14px; text-align: left;
+  background: var(--panel); border: 2px solid var(--border-soft); border-radius: var(--radius);
+  padding: 18px 20px; margin: 0 auto 24px; }
+.address-card__pin { font-size: 26px; line-height: 1; }
+.address-card__body { display: flex; flex-direction: column; gap: 2px; }
+.address-card__line { color: var(--text-soft); font-weight: 600; font-size: 15px; }
+.address-card__line--lead { color: #fff; font-weight: 800; font-size: 17px; }
+
 /* ---------------------------- Demo panel --------------------------------- */
 .demo-toggle { position: fixed; right: 18px; bottom: 18px; z-index: 40; border: none; cursor: pointer;
   background: #fff; color: var(--bg); font-weight: 800; font-family: inherit; font-size: 14px;

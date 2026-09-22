@@ -131,7 +131,7 @@ const FLOW = {
             return 'FLAG_UNSURE';
           } },
       ],
-      next: (a) => { fuelBucket(a).mpxnKnown = true; return 'LOOKUP'; },
+      next: (a) => { fuelBucket(a).mpxnKnown = true; return 'CHECKING'; },
     },
 
     FLAG_UNSURE: {
@@ -147,26 +147,44 @@ const FLOW = {
       next: () => 'SUPPLY_INSTALLED',
     },
 
-    LOOKUP: {
+    // Background system step: query ECOES/XO, decide the new_connection flag.
+    // The customer only ever sees a brief "checking" pause here — never the
+    // raw lookup result (that's an internal action on the flowchart).
+    CHECKING: {
       section: 'supply',
       chips: fuelChips,
-      kind: 'info',
-      eyebrow: (a) => `${fuelLabel(currentFuel(a))} supply`,
-      title: (a) => `We looked up your ${mpxnLabel(currentFuel(a))}`,
-      body: (a) => {
+      kind: 'system',
+      title: (a) => `Checking your ${fuelLabel(currentFuel(a)).toLowerCase()} supply…`,
+      help: (a) => `Looking up ${escapeHtml(fuelBucket(a).mpxn || 'your number')} on ${currentFuel(a) === 'electricity' ? 'ECOES' : 'XO'}.`,
+      run: (a) => {
+        const b = fuelBucket(a);
         const r = Simulate.lookup(currentFuel(a));
-        fuelBucket(a)._lookup = r; // cache for next()
-        const status = r.found
-          ? `<span class="conf conf--high">Found ✓</span>`
-          : `<span class="conf conf--low">Not found ✕</span>`;
-        return `<div class="vision__read">
-            <div class="vision__row"><span class="vision__k">Queried</span><span class="vision__v">${r.system}</span></div>
-            <div class="vision__row"><span class="vision__k">${mpxnLabel(currentFuel(a))}</span><span class="vision__v">${escapeHtml(fuelBucket(a).mpxn || '—')}</span></div>
-            <div class="vision__row"><span class="vision__k">Result</span><span class="vision__v">${status}</span></div>
-          </div>`;
+        b._lookup = r;
+        b.newConnection = r.newConnection;
+        // new_connection = FALSE → flag & continue (internal only, no screen).
+        if (r.found && !r.newConnection) {
+          b.flags.push('new_connection = FALSE — do NOT auto-enrol, needs manual check');
+        }
       },
-      help: 'This step stands in for the real Kraken lookup. Use the demo controls to change the result.',
-      next: (a) => (fuelBucket(a)._lookup.found ? 'NEW_CONN' : 'STOP_ADD_MPXN'),
+      next: (a) => (fuelBucket(a)._lookup.found ? 'ADDRESS_CONFIRM' : 'STOP_ADD_MPXN'),
+    },
+
+    // Customer-facing: show the address ECOES/XO returned and ask them to confirm.
+    ADDRESS_CONFIRM: {
+      section: 'supply',
+      chips: fuelChips,
+      eyebrow: (a) => `${fuelLabel(currentFuel(a))} supply`,
+      title: 'Is this the right property?',
+      help: (a) => `Here’s the address linked to your ${mpxnLabel(currentFuel(a))}. ` +
+                   'Please check it’s where you want the new meter installed.',
+      kind: 'choice',
+      body: (a) => addressCard(fuelBucket(a)._lookup.address),
+      choices: () => [
+        { label: 'Yes, that’s the property', sub: 'Install the new meter here', icon: '✅',
+          pick: (a) => { fuelBucket(a).addressConfirmed = true; return 'SUPPLY_INSTALLED'; } },
+        { label: 'No, that’s not right', sub: 'This isn’t the property I mean', icon: '✋', ghost: true,
+          pick: (a) => { fuelBucket(a).addressConfirmed = false; return 'STOP_ADDRESS'; } },
+      ],
     },
 
     STOP_ADD_MPXN: {
@@ -182,57 +200,16 @@ const FLOW = {
       }),
     },
 
-    NEW_CONN: {
-      section: 'supply',
-      chips: fuelChips,
-      kind: 'info',
-      title: 'Checking this is a new connection',
-      body: (a) => {
-        const isNew = fuelBucket(a)._lookup.newConnection;
-        fuelBucket(a).newConnection = isNew;
-        return `<div class="vision__read">
-            <div class="vision__row"><span class="vision__k">new_connection flag</span>
-              <span class="vision__v">${isNew ? '<span class="conf conf--high">True ✓</span>' : '<span class="conf conf--low">False ✕</span>'}</span></div>
-          </div>`;
-      },
-      notice: (a) => fuelBucket(a)._lookup.newConnection ? null : ({
-        type: 'flag',
-        title: 'Flag & continue',
-        html: 'This isn’t flagged as a new connection on record, so we won’t auto-enrol it — our team will check it manually. You can still carry on.',
-      }),
-      next: (a) => {
-        if (!fuelBucket(a)._lookup.newConnection) {
-          fuelBucket(a).flags.push('new_connection = FALSE — do NOT auto-enrol, needs manual check');
-        }
-        return 'ADDRESS';
-      },
-    },
-
-    ADDRESS: {
-      section: 'supply',
-      chips: fuelChips,
-      kind: 'info',
-      title: 'Checking the address on record',
-      body: (a) => {
-        const match = fuelBucket(a)._lookup.addressMatch;
-        return `<div class="vision__read">
-            <div class="vision__row"><span class="vision__k">Address on record</span>
-              <span class="vision__v">${match ? '<span class="conf conf--high">Matches ✓</span>' : '<span class="conf conf--low">Doesn’t match ✕</span>'}</span></div>
-          </div>`;
-      },
-      help: 'This stands in for matching the property address held against the supply point.',
-      next: (a) => (fuelBucket(a)._lookup.addressMatch ? 'SUPPLY_INSTALLED' : 'STOP_ADDRESS'),
-    },
-
     STOP_ADDRESS: {
       section: 'supply',
       chips: fuelChips,
       kind: 'stop',
-      title: 'The address doesn’t match',
+      title: 'That address needs fixing first',
       notice: (a) => ({
         type: 'stop',
-        title: 'Address mismatch',
-        html: `Please contact your <strong>${networkLabel(currentFuel(a))}</strong> to have the address fixed, ` +
+        title: 'The address on record isn’t right',
+        html: `The address held against this ${mpxnLabel(currentFuel(a))} doesn’t match your property. ` +
+              `Please contact your <strong>${networkLabel(currentFuel(a))}</strong> to have it corrected, ` +
               `then come back and complete the form once it’s been updated.`,
       }),
     },
@@ -277,28 +254,20 @@ const FLOW = {
         : 'Upload a photo of the ECV / meter position',
       help: 'We’ll check the photo automatically. Any image works for this demo.',
       kind: 'photo',
-      next: () => 'VISION',
+      next: () => 'CHECKING_PHOTO',
     },
 
-    VISION: {
+    // Background system step: the meter-photo vision model. The customer sees a
+    // brief "checking" pause; the raw model read is never shown to them.
+    CHECKING_PHOTO: {
       section: 'supply',
       chips: fuelChips,
-      kind: 'info',
-      title: 'Reading your photo',
-      body: (a) => {
-        const r = Simulate.visionRead(currentFuel(a));
-        fuelBucket(a)._vision = r;
-        const rows = r.items.map(i =>
-          `<div class="vision__row"><span class="vision__k">${i.k}</span><span class="vision__v">${i.v}</span></div>`).join('');
-        const conf = r.confidence === 'high'
-          ? `<span class="conf conf--high">High (${r.pct}%)</span>`
-          : `<span class="conf conf--low">Low (${r.pct}%)</span>`;
-        return `<div class="vision__read">
-            ${rows}
-            <div class="vision__row"><span class="vision__k">Model confidence</span><span class="vision__v">${conf}</span></div>
-          </div>`;
-      },
-      help: 'This stands in for the meter-photo vision model. Set its confidence in the demo controls.',
+      kind: 'system',
+      title: 'Checking your photo…',
+      help: (a) => currentFuel(a) === 'electricity'
+        ? 'Looking for the cut-out and meter tails.'
+        : 'Looking for the ECV / meter position.',
+      run: (a) => { fuelBucket(a)._vision = Simulate.visionRead(currentFuel(a)); },
       next: (a) => (fuelBucket(a)._vision.confidence === 'high' ? 'METER_DEADLINE' : 'VISION_LOW'),
     },
 
@@ -491,6 +460,7 @@ function buildPayload(a) {
     mpxn: a[f].mpxn || null,
     mpxnKnown: a[f].mpxnKnown !== false,
     newConnection: a[f].newConnection ?? null,
+    addressConfirmed: a[f].addressConfirmed ?? null,
     supplyInstalled: a[f].supplyInstalled ?? null,
     supplyInstallDate: a[f].supplyInstallDate || null,
     photoAnalysed: !!a[f]._vision,
@@ -524,6 +494,20 @@ function buildPayload(a) {
     email: a.email, phone: a.phone, dateOfBirth: a.dob,
   };
   return payload;
+}
+
+// Render the address "pulled" from ECOES/XO as a tidy address card.
+function addressCard(addr) {
+  if (!addr) return '';
+  const lines = [addr.line1, addr.line2, addr.town, addr.postcode].filter(Boolean);
+  return `<div class="address-card">
+    <span class="address-card__pin" aria-hidden="true">📍</span>
+    <div class="address-card__body">
+      ${lines.map((l, i) =>
+        `<span class="address-card__line${i === 0 ? ' address-card__line--lead' : ''}">${escapeHtml(l)}</span>`
+      ).join('')}
+    </div>
+  </div>`;
 }
 
 // Tiny HTML escaper (used for injected values & the payload dump).
